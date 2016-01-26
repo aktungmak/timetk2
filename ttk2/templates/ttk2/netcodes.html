@@ -45,18 +45,24 @@
         {% for netcode in netcode_list %}
           <tr>
             <td>
-              {% if netcode.enabled %}
-              <a class="btn btn-sm smooth btn-a">Enabled</a>
-              {% else %}
-              <a class="btn btn-sm smooth btn-n">Disabled</a>
-              {% endif %}
+              <form action="{% url 'togglenetcode' netcode.id %}" method="post">
+                {% csrf_token %}
+                {% if netcode.enabled %}
+                <button type="submit" class="btn btn-sm smooth btn-a">Enabled</a>
+                {% else %}
+                <button type="submit" class="btn btn-sm smooth btn-n">Disabled</a>
+                {% endif %}
+              </form>
             </td>
             <td>{{ netcode.network }}</td>
             <td>{{ netcode.activity }}</td>
             <td>{{ netcode.name }}</td>
             <td>{{ netcode.description }}</td>
             <td>
-              <a class="btn btn-c btn-sm smooth" href="{% url 'delnetcode' netcode.id %}">X</a>
+              <form action="{% url 'delnetcode' netcode.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-c btn-sm smooth">X</a>
+              </form>
             </td>
           </tr>
         {% endfor %}

@@ -1,5 +1,5 @@
-from django.shortcuts import render
-from django.http import HttpResponseRedirect
+from django.shortcuts import get_object_or_404, render
+from django.http import HttpResponseRedirect, HttpResponseNotAllowed
 from django.core.urlresolvers import reverse
 
 from models import Netcode, User
@@ -37,12 +37,21 @@ def netcodes(request):
 
     return render(request, 'ttk2/netcodes.html', ctx)
 
-def delnetcode(request):
-    HttpResponseRedirect(reverse('netcodes'))
-
 def delnetcode(request, netcode_id):
-    n = Netcode.get_object_or_404(pk=netcode_id).delete()
-    return HttpResponseRedirect(reverse('activities'))
+    if request.method == 'POST':
+        get_object_or_404(Netcode, pk=netcode_id).delete()
+        return HttpResponseRedirect(reverse('netcodes'))
+    else:
+        return HttpResponseNotAllowed(['POST'])
+
+def togglenetcode(request, netcode_id):
+    if request.method == 'POST':
+        n = get_object_or_404(Netcode, pk=netcode_id)
+        n.enabled = not n.enabled
+        n.save()
+        return HttpResponseRedirect(reverse('netcodes'))
+    else:
+        return HttpResponseNotAllowed(['POST'])
 
 def history(request):
     return render(request, 'ttk2/history.html')

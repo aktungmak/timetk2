@@ -11,5 +11,5 @@ class NewNetcodeForm(forms.Form):
               widget=forms.TextInput(attrs={'placeholder': 'Name'}),
               label='')
     description = forms.CharField(required=True, max_length=500,
-              widget=forms.TextInput(attrs={'placeholder': 'Search'}),
+              widget=forms.TextInput(attrs={'placeholder': 'Description'}),
               label='')

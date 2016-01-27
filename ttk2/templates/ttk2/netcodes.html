@@ -73,7 +73,7 @@
     <div class="row">
       <form action="{% url 'netcodes' %}" method="post">
         {% csrf_token %}
-        {{ newnetcodeform }}
+        {{ newnetcodeform.as_table }}
         <button type="submit" class="btn btn-sm btn-b smooth">Add</button>
       </form>
     </div>

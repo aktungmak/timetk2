@@ -40,13 +40,16 @@
             <td>{{ netcode.network }}</td>
             <td>{{ netcode.activity }}</td>
             <td>{{ netcode.name }}</td>
-            <td>12:12</td>
+            <td>{{ netcode.starttime|default_if_none:"--:--" }}</td>
             <td>
-              {% if netcode.running %}
-              <a class="btn btn-sm smooth btn-c">Stop</a>
-              {% else %}
-              <a class="btn btn-sm smooth btn-b">Start</a>
-              {% endif %}
+              <form action="{% url 'startstop' netcode.id %}" method="post">
+                {% csrf_token %}
+                {% if netcode.curstart %}
+                <button type="submit" class="btn btn-sm smooth btn-c">Stop</button>
+                {% else %}
+                <button type="submit" class="btn btn-sm smooth btn-b">Start</button>
+                {% endif %}
+              </form>
             </td>
           </tr>
         {% endfor %}

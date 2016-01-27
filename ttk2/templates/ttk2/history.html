@@ -32,27 +32,36 @@
         <button type="button" id="prevday" class="btn btn-sm btn-a smooth">&lt;- Prev Day</button>
         <button type="button" id="nextday" class="btn btn-sm btn-a smooth">Next Day -&gt;</button>
       </form>
-      <hr/>
     </div>
+    <hr/>
 
-    <div id="gctrlcont">
-      <button class="btn-sm btn-a smooth" data-bind="click: applyGrid">Apply Grid</button>
+    {% if event_list %}
+    <div id="tablecont">
+      <table class="table">
+        <thead>
+          <tr>
+            <td>Netcode</td>
+            <td>Name</td>
+            <td>Start Time</td>
+            <td>End Time</td>
+          </tr>
+        </thead>
+        <tbody>
+        {% for event in event_list %}
+          <tr>
+            <td>{{ event.netcode.network }}: {{ event.netcode.activity }}</td>
+            <td>{{ event.netcode.name }}</td>
+            <td>{{ event.start }}</td>
+            <td>{{ event.end }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
     </div>
-    <div id="gridcont">
-      <div class="grid">
-        <div class="row grow" data-bind="foreach: head">
-          <div class="cell header" data-bind="text: $data"></div>
-        </div>
-
-      <!-- ko foreach: rows -->
-        <div class="row grow">
-          <div class="fixed" data-bind="text: title"></div>
-        <!-- ko foreach: cells -->
-          <div class="cell" data-bind="click: $parent.setMarked.bind($data, $index()), css: { active1: $data == 1, active2: $data == 2, active3: $data == 3, active4: $data == 4 }"></div>
-        <!-- /ko -->
-        </div>
-      <!-- /ko -->
-      </div>
+    {% else %}
+    <div class="msg">
+    No events yet! Start and finish some on the <a href="{% url 'activities' %}">Activites</a> tab!
     </div>
+    {% endif %}
   </body>
 </html>

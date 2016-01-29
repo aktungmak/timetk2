@@ -5,9 +5,6 @@ from django.core.urlresolvers import reverse
 from models import Netcode, User, Event
 from forms import NewNetcodeForm
 
-def index(request):
-    return HttpResponse('hej!')
-
 def activities(request):
     netcode_list = Netcode.objects.filter(enabled=True)
     ctx = {'netcode_list': netcode_list}
@@ -72,15 +69,27 @@ def startstop(request, netcode_id):
         return HttpResponseNotAllowed(['POST'])
 
 
-def history(request):
+def history(request, year, month, day):
     # todo this should be current user
     u = User.objects.first()
     event_list = Event.objects.filter(netcode__user=u, netcode__enabled=True)
     ctx = {'event_list': event_list}
     return render(request, 'ttk2/history.html', ctx)
 
-def report(request, start, end):
-    return render(request, 'ttk2/reports.html')
+def historynow(request):
+    now = timezone.now()
+    return HttpResponseRedirect(reverse('history', args=(now.year, now.month, now.day)))
+
+def report(request, year, month, day):
+    # todo this should be current user
+    u = User.objects.first()
+    event_list = Event.objects.filter(netcode__user=u, netcode__enabled=True)
+    ctx = {'event_list': event_list}
+    return render(request, 'ttk2/report.html', ctx)
 
 def reportnow(request):
-    return HttpResponseRedirect(reverse('activities'))
+    now = timezone.now()
+    return HttpResponseRedirect(reverse('report', args=(now.year, now.month, now.day)))
+
+def editevent(request, event_id):
+    return "hi"

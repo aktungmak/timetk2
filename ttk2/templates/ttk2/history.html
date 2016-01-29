@@ -51,7 +51,12 @@
           <tr>
             <td>{{ event.netcode.network }}: {{ event.netcode.activity }}</td>
             <td>{{ event.netcode.name }}</td>
-            <td>{{ event.start }}</td>
+            <td>
+              <form action="{% url 'togglenetcode' netcode.id %}" method="post">
+                {% csrf_token %}
+                <input maxlength="100" placeholder="{{ event.start }}" value="{{ event.start }}" type="text">
+              </form>
+            </td>
             <td>{{ event.end }}</td>
           </tr>
         {% endfor %}

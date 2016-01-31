@@ -1,7 +1,8 @@
 from django.utils import timezone
 from django.shortcuts import get_object_or_404, render
-from django.http import HttpResponseRedirect, HttpResponseNotAllowed
+from django.http import HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseNotFound
 from django.core.urlresolvers import reverse
+from django.db.models import Q
 from models import Netcode, User, Event
 from forms import NewNetcodeForm
 
@@ -68,12 +69,24 @@ def startstop(request, netcode_id):
     else:
         return HttpResponseNotAllowed(['POST'])
 
-
 def history(request, year, month, day):
+    try:
+        now = timezone.datetime(*map(int, (year, month, day)))
+    except ValueError:
+        return HttpResponseNotFound("no such date!")
+
     # todo this should be current user
     u = User.objects.first()
-    event_list = Event.objects.filter(netcode__user=u, netcode__enabled=True)
-    ctx = {'event_list': event_list}
+
+    event_list = Event.objects.filter(Q(netcode__user=u)
+                                     &Q(netcode__enabled=True) 
+                                     &(Q(start=now)|Q(end=now)))
+                                      
+
+    ctx = {'event_list': event_list,
+           'prev_day': now-timezone.timedelta(days=1),
+           'next_day': now+timezone.timedelta(days=1),
+    }
     return render(request, 'ttk2/history.html', ctx)
 
 def historynow(request):
@@ -92,4 +105,4 @@ def reportnow(request):
     return HttpResponseRedirect(reverse('report', args=(now.year, now.month, now.day)))
 
 def editevent(request, event_id):
-    return "hi"
+    return HttpResponseRedirect(reverse('historynow'))

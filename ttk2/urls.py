@@ -19,5 +19,5 @@ urlpatterns = [
     url(r'^report/(?P<year>\w+)/(?P<month>\w+)/(?P<day>\w+).?$', views.report, name='report'),
     url(r'^report.?$', views.reportnow, name='reportnow'),
 
-    url(r'^events/(?P<event_id>)/edit', views.editevent, name='editevent'),
+    url(r'^events/(?P<event_id>\w+)/edit', views.editevent, name='editevent'),
 ]

@@ -29,8 +29,8 @@
         <input id="rstart" type="text" class="smooth" placeholder="select date" name="rstart">
         <button type="submit" class="btn btn-sm btn-b smooth">Go</button>
         &nbsp;
-        <button type="button" id="prevday" class="btn btn-sm btn-a smooth">&lt;- Prev Day</button>
-        <button type="button" id="nextday" class="btn btn-sm btn-a smooth">Next Day -&gt;</button>
+        <a href="{% url 'history' prev_day.year prev_day.month prev_day.day %}" class="btn btn-sm btn-a smooth">&lt;- Prev Day</a>
+        <a href="{% url 'history' next_day.year next_day.month next_day.day %}" class="btn btn-sm btn-a smooth">Next Day -&gt;</a>
       </form>
     </div>
     <hr/>
@@ -52,12 +52,17 @@
             <td>{{ event.netcode.network }}: {{ event.netcode.activity }}</td>
             <td>{{ event.netcode.name }}</td>
             <td>
-              <form action="{% url 'togglenetcode' netcode.id %}" method="post">
+              <form action="{% url 'editevent' event.id %}" method="post">
                 {% csrf_token %}
-                <input maxlength="100" placeholder="{{ event.start }}" value="{{ event.start }}" type="text">
+                <input placeholder="{{ event.start }}" value="{{ event.start }}" type="text" style="border:none;">
               </form>
             </td>
-            <td>{{ event.end }}</td>
+            <td>
+              <form action="{% url 'editevent' event.id %}" method="post">
+                {% csrf_token %}
+                <input placeholder="{{ event.end }}" value="{{ event.end }}" type="text" style="border:none;">
+              </form>
+            </td>
           </tr>
         {% endfor %}
         </tbody>

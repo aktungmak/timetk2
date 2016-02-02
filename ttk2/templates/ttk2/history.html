@@ -24,14 +24,20 @@
     </nav>
 
     <div class="row">
-      <!-- datepick start/end here -->
-      <form data-bind="submit: getDayReport">
-        <input id="rstart" type="text" class="smooth" placeholder="select date" name="rstart">
-        <button type="submit" class="btn btn-sm btn-b smooth">Go</button>
-        &nbsp;
-        <a href="{% url 'history' prev_day.year prev_day.month prev_day.day %}" class="btn btn-sm btn-a smooth">&lt;- Prev Day</a>
-        <a href="{% url 'history' next_day.year next_day.month next_day.day %}" class="btn btn-sm btn-a smooth">Next Day -&gt;</a>
-      </form>
+      <div class="col c3">
+        <form action="{% url 'historynow' %}" method="post">
+          {% csrf_token %}
+          <input type="date" value="{{ now|date:'Y-m-d' }}" name="date" style="display:inline;">
+          <button type="submit" class="btn btn-sm btn-b smooth">Go</button>
+        </form>
+      </div>
+
+      <div class="col c4"> </div>
+
+      <div class="col c4">
+        <a href="{% url 'history' prev_day.year prev_day.month prev_day.day %}" class="btn btn-sm btn-a smooth">⇦ Prev Day</a>
+        <a href="{% url 'history' next_day.year next_day.month next_day.day %}" class="btn btn-sm btn-a smooth">Next Day ⇨</a>
+      </div>
     </div>
     <hr/>
 
@@ -54,13 +60,17 @@
             <td>
               <form action="{% url 'editevent' event.id %}" method="post">
                 {% csrf_token %}
-                <input placeholder="{{ event.start }}" value="{{ event.start }}" type="text" style="border:none;">
+                <input placeholder="{{ event.start|date:'Y-m-d' }} {{ event.start|time:'H:i:s' }}"
+                       value="{{ event.start|date:'Y-m-d' }} {{ event.start|time:'H:i:s' }}"
+                       type="text" name="start" style="border:none;">
               </form>
             </td>
             <td>
               <form action="{% url 'editevent' event.id %}" method="post">
                 {% csrf_token %}
-                <input placeholder="{{ event.end }}" value="{{ event.end }}" type="text" style="border:none;">
+                <input placeholder="{{ event.end|date:'Y-m-d' }} {{ event.end|time:'H:i:s' }}"
+                       value="{{ event.end|date:'Y-m-d' }} {{ event.end|time:'H:i:s' }}"
+                       type="text" name="end" style="border:none;">
               </form>
             </td>
           </tr>
@@ -70,7 +80,7 @@
     </div>
     {% else %}
     <div class="msg">
-    No events yet! Start and finish some on the <a href="{% url 'activities' %}">Activites</a> tab!
+    No events for this day! Start and finish some on the <a href="{% url 'activities' %}">Activites</a> tab!
     </div>
     {% endif %}
   </body>

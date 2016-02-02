@@ -1,8 +1,12 @@
+import datetime
+
 from django.utils import timezone
 from django.shortcuts import get_object_or_404, render
-from django.http import HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseNotFound
+from django.http import HttpResponseRedirect, HttpResponseNotAllowed, HttpResponseNotFound, HttpResponseBadRequest
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from django.core.exceptions import ValidationError
+
 from models import Netcode, User, Event
 from forms import NewNetcodeForm
 
@@ -78,12 +82,13 @@ def history(request, year, month, day):
     # todo this should be current user
     u = User.objects.first()
 
+    # get all enabled events for this user, which either started or ended today
     event_list = Event.objects.filter(Q(netcode__user=u)
-                                     &Q(netcode__enabled=True) 
-                                     &(Q(start=now)|Q(end=now)))
-                                      
+                                     &Q(netcode__enabled=True)
+                                     &(Q(start__date=now)|Q(end__date=now)))
 
     ctx = {'event_list': event_list,
+           'now': now.date(),
            'prev_day': now-timezone.timedelta(days=1),
            'next_day': now+timezone.timedelta(days=1),
     }
@@ -91,7 +96,17 @@ def history(request, year, month, day):
 
 def historynow(request):
     now = timezone.now()
-    return HttpResponseRedirect(reverse('history', args=(now.year, now.month, now.day)))
+    if request.method == 'POST':
+        datestr = request.POST['date']
+        datestr.replace('/', '-')
+        try:
+            date = datetime.datetime.strptime(datestr, '%Y-%m-%d')
+        except ValueError:
+            return HttpResponseRedirect(reverse('history', args=(now.year, now.month, now.day)))
+        else:
+            return HttpResponseRedirect(reverse('history', args=(date.year, date.month, date.day)))
+    else:
+        return history(request, now.year, now.month, now.day)
 
 def report(request, year, month, day):
     # todo this should be current user
@@ -105,4 +120,36 @@ def reportnow(request):
     return HttpResponseRedirect(reverse('report', args=(now.year, now.month, now.day)))
 
 def editevent(request, event_id):
-    return HttpResponseRedirect(reverse('historynow'))
+    if request.method == 'POST':
+        e = get_object_or_404(Event, pk=event_id)
+
+        if 'start' in request.POST:
+            olddate = e.start
+            try:
+                nd = datetime.datetime.strptime(request.POST['start'], '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                pass
+            else:
+                e.start = timezone.make_aware(nd)
+        elif 'end' in request.POST:
+            olddate = e.end
+            try:
+                nd = datetime.datetime.strptime(request.POST['end'], '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                pass
+            else:
+                e.end = timezone.make_aware(nd)
+        else:
+            return HttpResponseBadRequest()
+
+        try:
+            e.full_clean()
+        except ValidationError as e:
+            pass
+        else:
+            # only save if validation is successful
+            e.save()
+        # use the old date to redirect to
+        return HttpResponseRedirect(reverse('history', args=(olddate.year, olddate.month, olddate.day)))
+    else:
+        return HttpResponseNotAllowed(['POST'])

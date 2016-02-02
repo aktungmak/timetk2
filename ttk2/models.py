@@ -3,6 +3,7 @@ from datetime import datetime
 
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
+from django.core.exceptions import ValidationError
 
 @python_2_unicode_compatible
 class User(models.Model):
@@ -39,6 +40,13 @@ class Netcode(models.Model):
                               self.activity,
                               self.name)
 
+def checkStartBeforeEnd(event):
+    if not event.start <= event.end:
+        raise ValidationError("start time is not before end time!")
+def checkEndAfterStart(event):
+    if not event.start <= event.end:
+        raise ValidationError("start time is not before end time!")
+
 @python_2_unicode_compatible
 class Event(models.Model):
     netcode = models.ForeignKey(Netcode, on_delete=models.CASCADE)
@@ -49,5 +57,12 @@ class Event(models.Model):
     def duration(self):
         return self.end - self.start
 
+    def clean(self):
+        cleaned_data = super(Event, self).clean()
+        if not self.start <= self.end:
+            raise ValidationError("start time is not before end time!")
+        return cleaned_data
+
     def __str__(self):
         return "%s -> %s" % (self.start, self.end)
+

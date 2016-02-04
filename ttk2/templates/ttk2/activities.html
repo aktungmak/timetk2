@@ -40,7 +40,18 @@
             <td>{{ netcode.network }}</td>
             <td>{{ netcode.activity }}</td>
             <td>{{ netcode.name }}</td>
-            <td>{{ netcode.starttime|default_if_none:"--:--" }}</td>
+            <td>
+              {% if netcode.starttime %}
+              <form action="{% url 'editstart' netcode.id %}" method="post">
+                {% csrf_token %}
+                <input placeholder="{{ netcode.curstart|time:'H:i' }}"
+                       value="{{ netcode.curstart|time:'H:i' }}"
+                       type="text" name="start" style="border:none;">
+              </form>
+              {% else %}
+                --:--
+              {% endif %}
+            </td>
             <td>
               <form action="{% url 'startstop' netcode.id %}" method="post">
                 {% csrf_token %}

@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'^netcodes/(?P<netcode_id>[0-9]+)/delete', views.delnetcode, name='delnetcode'),
     url(r'^netcodes/(?P<netcode_id>[0-9]+)/toggle', views.togglenetcode, name='togglenetcode'),
     url(r'^netcodes/(?P<netcode_id>[0-9]+)/startstop', views.startstop, name='startstop'),
+    url(r'^netcodes/(?P<netcode_id>[0-9]+)/editstart', views.editstart, name='editstart'),
 
     url(r'^history/(?P<year>\w+)/(?P<month>\w+)/(?P<day>\w+).?$', views.history, name='history'),
     url(r'^history.?$', views.historynow, name='historynow'),

@@ -40,15 +40,21 @@ def netcodes(request):
     return render(request, 'ttk2/netcodes.html', ctx)
 
 def delnetcode(request, netcode_id):
+    # todo this should be current user
+    u = User.objects.first()
+
     if request.method == 'POST':
-        get_object_or_404(Netcode, pk=netcode_id).delete()
+        get_object_or_404(Netcode, pk=netcode_id, user=u).delete()
         return HttpResponseRedirect(reverse('netcodes'))
     else:
         return HttpResponseNotAllowed(['POST'])
 
 def togglenetcode(request, netcode_id):
+    # todo this should be current user
+    u = User.objects.first()
+
     if request.method == 'POST':
-        n = get_object_or_404(Netcode, pk=netcode_id)
+        n = get_object_or_404(Netcode, pk=netcode_id, user=u)
         n.enabled = not n.enabled
         n.save()
         return HttpResponseRedirect(reverse('netcodes'))
@@ -56,8 +62,11 @@ def togglenetcode(request, netcode_id):
         return HttpResponseNotAllowed(['POST'])
 
 def startstop(request, netcode_id):
+    # todo this should be current user
+    u = User.objects.first()
+
     if request.method == 'POST':
-        n = get_object_or_404(Netcode, pk=netcode_id)
+        n = get_object_or_404(Netcode, pk=netcode_id, user=u)
         if n.curstart is None:
             # not running, lets start
             n.curstart = timezone.now()
@@ -72,6 +81,28 @@ def startstop(request, netcode_id):
         return HttpResponseRedirect(reverse('activities'))
     else:
         return HttpResponseNotAllowed(['POST'])
+
+def editstart(request, netcode_id):
+    # todo this should be current user
+    u = User.objects.first()
+
+    if request.method == 'POST':
+        n = get_object_or_404(Netcode, pk=netcode_id, user=u)
+        if not n.curstart is None and 'start' in request.POST:
+            # only edit if running
+            try:
+                new = datetime.datetime.strptime(request.POST['start'], '%H:%M')
+            except ValueError:
+                pass
+            else:
+                print new
+                n.curstart.replace(hour=new.hour, minute=new.minute)
+                print n.curstart
+                n.save()
+        return HttpResponseRedirect(reverse('activities'))
+    else:
+        return HttpResponseNotAllowed(['POST'])
+
 
 def history(request, year, month, day):
     try:
@@ -120,8 +151,11 @@ def reportnow(request):
     return HttpResponseRedirect(reverse('report', args=(now.year, now.month, now.day)))
 
 def editevent(request, event_id):
+    # todo this should be current user
+    u = User.objects.first()
+
     if request.method == 'POST':
-        e = get_object_or_404(Event, pk=event_id)
+        e = get_object_or_404(Event, pk=event_id, netcode__user=u)
 
         if 'start' in request.POST:
             olddate = e.start

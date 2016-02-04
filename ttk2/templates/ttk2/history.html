@@ -50,6 +50,7 @@
             <td>Name</td>
             <td>Start Time</td>
             <td>End Time</td>
+            <td>Duration</td>
           </tr>
         </thead>
         <tbody>
@@ -73,6 +74,7 @@
                        type="text" name="end" style="border:none;">
               </form>
             </td>
+            <td>{{ event.start|timesince:event.end }}</td>
           </tr>
         {% endfor %}
         </tbody>

@@ -6,25 +6,26 @@ from django.http import HttpResponseRedirect, HttpResponseNotAllowed, HttpRespon
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.core.exceptions import ValidationError
+from django.contrib.auth.decorators import login_required
 
 from models import Netcode, User, Event
 from forms import NewNetcodeForm
 
+@login_required
 def activities(request):
-    netcode_list = Netcode.objects.filter(enabled=True)
+    netcode_list = Netcode.objects.filter(enabled=True, user=request.user)
     ctx = {'netcode_list': netcode_list}
     return render(request, 'ttk2/activities.html', ctx)
 
+@login_required
 def netcodes(request):
-    # todo this should be current user
-    u = User.objects.first()
-    netcode_list = Netcode.objects.filter(user=u)
+    netcode_list = Netcode.objects.filter(user=request.user)
     ctx = {'netcode_list': netcode_list}
     if request.method == 'POST':
         form = NewNetcodeForm(request.POST)
         if form.is_valid():
             # process form.cleaned_data here
-            n = u.netcode_set.create()
+            n = request.user.netcode_set.create()
             n.network = request.POST['network']
             n.activity = request.POST['activity']
             n.name = request.POST['name']
@@ -39,34 +40,28 @@ def netcodes(request):
 
     return render(request, 'ttk2/netcodes.html', ctx)
 
+@login_required
 def delnetcode(request, netcode_id):
-    # todo this should be current user
-    u = User.objects.first()
-
     if request.method == 'POST':
-        get_object_or_404(Netcode, pk=netcode_id, user=u).delete()
+        get_object_or_404(Netcode, pk=netcode_id, user=request.user).delete()
         return HttpResponseRedirect(reverse('netcodes'))
     else:
         return HttpResponseNotAllowed(['POST'])
 
+@login_required
 def togglenetcode(request, netcode_id):
-    # todo this should be current user
-    u = User.objects.first()
-
     if request.method == 'POST':
-        n = get_object_or_404(Netcode, pk=netcode_id, user=u)
+        n = get_object_or_404(Netcode, pk=netcode_id, user=request.user)
         n.enabled = not n.enabled
         n.save()
         return HttpResponseRedirect(reverse('netcodes'))
     else:
         return HttpResponseNotAllowed(['POST'])
 
+@login_required
 def startstop(request, netcode_id):
-    # todo this should be current user
-    u = User.objects.first()
-
     if request.method == 'POST':
-        n = get_object_or_404(Netcode, pk=netcode_id, user=u)
+        n = get_object_or_404(Netcode, pk=netcode_id, user=request.user)
         if n.curstart is None:
             # not running, lets start
             n.curstart = timezone.now()
@@ -82,12 +77,10 @@ def startstop(request, netcode_id):
     else:
         return HttpResponseNotAllowed(['POST'])
 
+@login_required
 def editstart(request, netcode_id):
-    # todo this should be current user
-    u = User.objects.first()
-
     if request.method == 'POST':
-        n = get_object_or_404(Netcode, pk=netcode_id, user=u)
+        n = get_object_or_404(Netcode, pk=netcode_id, user=request.user)
         if not n.curstart is None and 'start' in request.POST:
             # only edit if running
             try:
@@ -96,25 +89,23 @@ def editstart(request, netcode_id):
                 pass
             else:
                 print new
-                n.curstart.replace(hour=new.hour, minute=new.minute)
+                n.curstart = n.curstart.replace(hour=new.hour, minute=new.minute)
                 print n.curstart
                 n.save()
         return HttpResponseRedirect(reverse('activities'))
     else:
         return HttpResponseNotAllowed(['POST'])
 
-
+@login_required
 def history(request, year, month, day):
     try:
         now = timezone.datetime(*map(int, (year, month, day)))
     except ValueError:
         return HttpResponseNotFound("no such date!")
 
-    # todo this should be current user
-    u = User.objects.first()
 
     # get all enabled events for this user, which either started or ended today
-    event_list = Event.objects.filter(Q(netcode__user=u)
+    event_list = Event.objects.filter(Q(netcode__user=request.user)
                                      &Q(netcode__enabled=True)
                                      &(Q(start__date=now)|Q(end__date=now)))
 
@@ -125,6 +116,7 @@ def history(request, year, month, day):
     }
     return render(request, 'ttk2/history.html', ctx)
 
+@login_required
 def historynow(request):
     now = timezone.now()
     if request.method == 'POST':
@@ -139,10 +131,9 @@ def historynow(request):
     else:
         return history(request, now.year, now.month, now.day)
 
+@login_required
 def report(request, year, month, day):
-    # todo this should be current user
-    u = User.objects.first()
-    event_list = Event.objects.filter(netcode__user=u, netcode__enabled=True)
+    event_list = Event.objects.filter(netcode__user=request.user, netcode__enabled=True)
     ctx = {'event_list': event_list}
     return render(request, 'ttk2/report.html', ctx)
 
@@ -151,11 +142,8 @@ def reportnow(request):
     return HttpResponseRedirect(reverse('report', args=(now.year, now.month, now.day)))
 
 def editevent(request, event_id):
-    # todo this should be current user
-    u = User.objects.first()
-
     if request.method == 'POST':
-        e = get_object_or_404(Event, pk=event_id, netcode__user=u)
+        e = get_object_or_404(Event, pk=event_id, netcode__user=request.user)
 
         if 'start' in request.POST:
             olddate = e.start

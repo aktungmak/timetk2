@@ -39,13 +39,6 @@ class Netcode(models.Model):
                               self.activity,
                               self.name)
 
-def checkStartBeforeEnd(event):
-    if not event.start <= event.end:
-        raise ValidationError("start time is not before end time!")
-def checkEndAfterStart(event):
-    if not event.start <= event.end:
-        raise ValidationError("start time is not before end time!")
-
 @python_2_unicode_compatible
 class Event(models.Model):
     netcode = models.ForeignKey(Netcode, on_delete=models.CASCADE)

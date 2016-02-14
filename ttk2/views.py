@@ -118,28 +118,47 @@ def history(request, year, month, day):
 
 @login_required
 def historynow(request):
-    now = timezone.now()
     if request.method == 'POST':
         datestr = request.POST['date']
         datestr.replace('/', '-')
         try:
             date = datetime.datetime.strptime(datestr, '%Y-%m-%d')
         except ValueError:
-            return HttpResponseRedirect(reverse('history', args=(now.year, now.month, now.day)))
-        else:
-            return HttpResponseRedirect(reverse('history', args=(date.year, date.month, date.day)))
+            date = timezone.now()
     else:
-        return history(request, now.year, now.month, now.day)
+        date = timezone.now()
+    return HttpResponseRedirect(reverse('history', args=(date.year, date.month, date.day)))
 
 @login_required
 def report(request, year, month, day):
-    event_list = Event.objects.filter(netcode__user=request.user, netcode__enabled=True)
-    ctx = {'event_list': event_list}
+    try:
+        date = timezone.datetime(*map(int, (year, month, day)))
+    except ValueError:
+        return HttpResponseNotFound("no such date!")
+    netcode_list = Netcode.objects.filter(Q(user=request.user)
+                                         &(Q(event__end__date=date)
+                                          |Q(event__start__date=date))).distinct()
+    
+    ctx = {'netcode_list': netcode_list,
+           'date': date,
+           'prev_mon': date-timezone.timedelta(weeks=1),
+           'next_mon': date+timezone.timedelta(weeks=1),
+    }
     return render(request, 'ttk2/report.html', ctx)
 
+@login_required
 def reportnow(request):
-    now = timezone.now()
-    return HttpResponseRedirect(reverse('report', args=(now.year, now.month, now.day)))
+    if request.method == 'POST':
+        datestr = request.POST['date']
+        datestr.replace('/', '-')
+        try:
+            date = datetime.datetime.strptime(datestr, '%Y-%m-%d')
+        except ValueError:
+            date = timezone.now()
+    else:
+        date = timezone.now()
+    monday = date - timezone.timedelta(days=date.weekday())
+    return HttpResponseRedirect(reverse('report', args=(monday.year, monday.month, monday.day)))
 
 def editevent(request, event_id):
     if request.method == 'POST':

@@ -11,11 +11,6 @@
     <meta http-equiv="Refresh" content="800">
 
     <link rel="stylesheet" href="{% static 'ttk2/min.css' %}">
-    <style>
-      input {
-        float: left;
-      }
-    </style>
   </head>
   <body>
     <nav class="nav" tabindex="-1" onclick="this.focus()">
@@ -28,82 +23,59 @@
       </div>
     </nav>
 
-
-
-
     <div class="row">
-      <!-- datepick start/end here -->
-      <form data-bind="submit: getReport">
-        <input id="rstart" type="text" class="smooth" placeholder="start date" name="rstart">
-        <input id="rfinish" type="text" class="smooth" placeholder="finish date" name="rfinish">
-        <button type="submit" class="btn btn-sm btn-b smooth">Go</button>
-        &nbsp
-        <input type="radio" value="day"  name="reportType" data-bind="checked: reportType"> Simple View</input>
-        <input type="radio" value="week" name="reportType" data-bind="checked: reportType"> Compatibility View</input>
-        &nbsp;
-        <button type="button" id="nextweek" class="btn btn-sm btn-a smooth">Next Week -></button>
-        <button type="button" id="prevweek" class="btn btn-sm btn-a smooth"><- Prev Week</button>
-      </form>
-      <hr/>
-    </div>
-    <div class="msg" style="display:none;" data-bind="visible: days().length == 0">No hours for that date range!</div>
-    <div id="dayview" data-bind="visible: reportType() == 'day'">
-    <!-- ko foreach: days -->
-      <div class="row">
-        <h2 class="col c2" data-bind="text: dispdate"></h2>
-        <table class="table col c10">
-          <thead>
-            <tr>
-              <td>Netcode</td>
-              <td>Title</td>
-              <td>Time (sec)</td>
-              <td>Time (decimal)</td>
-            </tr>
-          </thead>
-          <tbody data-bind="foreach: netcodes">
-            <tr>
-              <td data-bind="text: netcode"></td>
-              <td data-bind="text: title"></td>
-              <td data-bind="text: duration"></td>
-              <td data-bind="text: decdur"></td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="col c3">
+        <form action="{% url 'reportnow' %}" method="post">
+          {% csrf_token %}
+          <input type="date" value="{{ date|date:'Y-m-d' }}" name="date" style="display:inline;">
+          <button type="submit" class="btn btn-sm btn-b smooth">Go</button>
+        </form>
       </div>
-    <!-- /ko -->
-    </div>
 
-    <div id="weekview" data-bind="visible: reportType() == 'week'">
-      <table class="table" data-bind="visible: days().length != 0">
-          <thead>
-            <tr>
-              <td>Netcode</td>
-              <!-- ko foreach: days -->
-                <td data-bind="text: dispdate"></td>
-              <!-- /ko -->
-            </tr>
-          </thead>
-          <tbody>
-            <!-- ko foreach: { data: aggNetcodes, as: 'nc' } -->
-            <tr>
-              <td data-bind="text: $data"></td>
-              <!-- ko foreach: $root.days -->
-              <td data-bind="text: $root.getTime($index(), nc)"></td>
-              <!-- /ko -->
-            </tr>
-            <!-- /ko -->
-            <tr>
-              <td><b>Day Total:</b></td>
-              <!-- ko foreach: $root.days -->
-              <td><b data-bind="text: dayTotal"></b></td>
-              <!-- /ko -->
-            </tr>
-          </tbody>
-        </table>
+      <div class="col c4"> </div>
+
+      <div class="col c4">
+        <a href="{% url 'report' prev_mon.year prev_mon.month prev_mon.day %}" class="btn btn-sm btn-a smooth">⇦ Prev Week</a>
+        <a href="{% url 'report' next_mon.year next_mon.month next_mon.day %}" class="btn btn-sm btn-a smooth">Next Week ⇨</a>
+      </div>
     </div>
-    <script src="js/vendor/jquery-1.11.0.min.js"></script>
-    <script src="js/vendor/knockout-3.2.0.min.js"></script>
-    <script src="js/vendor/pikaday.min.js"></script>
-    <script src="js/main.js"></script>
+    <hr/>
+
+    {% if netcode_list %}
+    <div id="tablecont">
+      <table class="table">
+        <thead>
+          <tr>
+            <td>Netcode</td>
+            <td>Name</td>
+            <td>Mon</td>
+            <td>Tue</td>
+            <td>Wed</td>
+            <td>Thu</td>
+            <td>Fri</td>
+            <td>Sat</td>
+            <td>Sun</td>
+          </tr>
+        </thead>
+        <tbody>
+        {% for netcode in netcode_list %}
+          <tr>
+            <td>{{ netcode.network }}: {{ event.netcode.activity }}</td>
+            <td>{{ netcode.name }}</td>
+          {% for day in netcode.days %}
+            <td>
+              {{ day.total }}
+            </td>
+          {% endfor %}
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="msg">
+    No hours for this week! Start and finish some on the <a href="{% url 'activities' %}">Activites</a> tab!
+    </div>
+    {% endif %}
   </body>
 </html>

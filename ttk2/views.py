@@ -6,10 +6,26 @@ from django.http import HttpResponseRedirect, HttpResponseNotAllowed, HttpRespon
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.core.exceptions import ValidationError
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
 
-from models import Netcode, User, Event
+from models import Netcode, Event
 from forms import NewNetcodeForm
+
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            from django.contrib.auth import authenticate, login
+            user = authenticate(username=form.cleaned_data.get('username'), password=form.cleaned_data.get('password1'))
+            login(request, user)
+            return HttpResponseRedirect(reverse('activities'))
+    else:
+        form = UserCreationForm()
+
+    return render(request, 'registration/register.html', {'form': form})
 
 @login_required
 def activities(request):

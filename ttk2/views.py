@@ -10,7 +10,6 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 
-
 from models import Netcode, Event
 from forms import NewNetcodeForm
 
@@ -27,10 +26,6 @@ def register(request):
         form = UserCreationForm()
 
     return render(request, 'registration/register.html', {'form': form})
-
-# def logout(request):
-#     logout(request)
-#     return HttpResponseRedirect(reverse('activites'))
 
 @login_required
 def activities(request):

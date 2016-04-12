@@ -3,6 +3,7 @@ from django.conf.urls import url
 from . import views
 
 urlpatterns = [
+    url(r'^register/', views.register, name='create_account'),
 
     url(r'^$', views.activities, name='index'),
     url(r'^activities', views.activities, name='activities'),

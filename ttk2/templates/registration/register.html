@@ -1,0 +1,6 @@
+<h2>Create new account</h2>
+<form method="post" action="{% url 'create_account' %}">
+{% csrf_token %}
+{{ form.as_p }}
+<input type="submit" value="Create">
+</form>

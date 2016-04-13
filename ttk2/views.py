@@ -146,19 +146,29 @@ def historynow(request):
     return HttpResponseRedirect(reverse('history', args=(date.year, date.month, date.day)))
 
 @login_required
-def report(request, year, month, day):
+def report(request, year, month, day, num_days=7):
     try:
-        date = timezone.datetime(*map(int, (year, month, day)))
+        start_date = timezone.datetime(*map(int, (year, month, day)))
+        end_date = start_date+timezone.timedelta(days=num_days)
     except ValueError:
         return HttpResponseNotFound("no such date!")
+
+    headers = ['Netcode', 'Name']
+    date_list = [start_date + timezone.timedelta(days=x) for x in range(0, num_days)]
+    date_list = [date.strptime('%a %d %b') for date in date_list]
+    headers = headers + date_list
+
     netcode_list = Netcode.objects.filter(Q(user=request.user)
-                                         &(Q(event__end__date=date)
-                                          |Q(event__start__date=date))).distinct()
-    
+                                         &(Q(event__end__date__lte=end_date)
+                                          &Q(event__start__date__gte=start_date))).distinct()
+
+
+
     ctx = {'netcode_list': netcode_list,
-           'date': date,
-           'prev_mon': date-timezone.timedelta(weeks=1),
-           'next_mon': date+timezone.timedelta(weeks=1),
+           'headers': headers,
+           'date': start_date,
+           'prev_mon': start_date-timezone.timedelta(weeks=1),
+           'next_mon': start_date+timezone.timedelta(weeks=1),
     }
     return render(request, 'ttk2/report.html', ctx)
 
@@ -176,6 +186,7 @@ def reportnow(request):
     monday = date - timezone.timedelta(days=date.weekday())
     return HttpResponseRedirect(reverse('report', args=(monday.year, monday.month, monday.day)))
 
+@login_required
 def editevent(request, event_id):
     if request.method == 'POST':
         e = get_object_or_404(Event, pk=event_id, netcode__user=request.user)
